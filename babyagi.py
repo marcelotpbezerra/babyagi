@@ -259,6 +259,22 @@ def context_agent(query: str, top_results_num: int):
     return [(str(item.metadata["task"])) for item in sorted_results]
 
 
+def write_result_to_file(filename, result):
+    # Try to open the output file for reading
+    try:
+        with open(filename, 'r') as f:
+            existing_data = f.read()
+    except FileNotFoundError:
+        existing_data = ''
+
+    # Combine the existing data and the new variable
+    new_data = existing_data + '\n\n' + result
+
+    # Write the new data to the output file
+    with open(filename, 'w') as f:
+        f.write(new_data)
+
+
 # Add the first task
 first_task = {"task_id": 1, "task_name": INITIAL_TASK}
 
@@ -282,6 +298,9 @@ while True:
         this_task_id = int(task["task_id"])
         print("\033[93m\033[1m" + "\n*****TASK RESULT*****\n" + "\033[0m\033[0m")
         print(result)
+        
+        # write and append output to .txt file
+        write_result_to_file("output_trail.txt", result)
 
         # Step 2: Enrich result and store in Pinecone
         enriched_result = {
