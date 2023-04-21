@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import abc
 import os
 import subprocess
 import time
 from collections import deque
-from typing import Dict, List
+from typing import Dict, List, NamedTuple
 import importlib
 import re
 import openai
@@ -19,6 +20,8 @@ load_dotenv()
 # API Keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 assert OPENAI_API_KEY, "OPENAI_API_KEY environment variable is missing from .env"
+
+OPENAI_API_MODEL = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo")
 
 LLM_MODEL = os.getenv("LLM_MODEL", os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo"))
 
@@ -187,6 +190,17 @@ class SingleTaskListStorage:
         return [t["task_name"] for t in self.tasks]
 
 
+# Memory for tasks
+index = NumpyMemory()
+
+# For Pinecone use the following:
+# from memories.pinecone_memory import PineconeMemory
+# index = PineconeMemory()
+
+# For vecto use the following:
+#from memories.vecto_memory import VectoMemory
+#index = VectoMemory()
+
 # Initialize tasks storage
 tasks_storage = SingleTaskListStorage()
 if COOPERATIVE_MODE in ['l', 'local']:
@@ -345,10 +359,12 @@ def context_agent(query: str, top_results_num: int):
         list: A list of tasks as context for the given query, sorted by relevance.
 
     """
+
     results = results_storage.query(query=query, top_results_num=top_results_num)
     # print("***** RESULTS *****")
     # print(results)
     return results
+
 
 # Add the initial task if starting new objective
 if not JOIN_EXISTING_OBJECTIVE:
